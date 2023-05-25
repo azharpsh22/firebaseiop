@@ -5,6 +5,13 @@
 #include <FirebaseESP8266.h>
 #include <ESP8266WiFi.h>
 
+#include "DHT.h"
+#define DHTPIN 12 
+
+#define DHTTYPE DHT11 
+
+DHT dht(DHTPIN, DHTTYPE);
+
 #ifndef STASSID
 #define STASSID "spacex"
 #define STAPSK  "azharpasha"
@@ -32,6 +39,9 @@ int NilaiDigital;
 int aa;
 
 void setup() {
+  Serial.println(F("DHTxx test!"));
+
+  dht.begin();
   pinMode(lamp1,OUTPUT);
   pinMode(lamp2,OUTPUT);
   pinMode(lamp3,OUTPUT);
@@ -64,6 +74,31 @@ void setup() {
 }
 
 void loop() {
+
+  
+  float h = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+  float t = dht.readTemperature();
+  // Read temperature as Fahrenheit (isFahrenheit = true)
+  float f = dht.readTemperature(true);
+
+  // Check if any reads failed and exit early (to try again).
+  if (isnan(h) || isnan(t) || isnan(f)) {
+    Serial.println(F("Failed to read from DHT sensor!"));
+    return;
+  }
+
+  // Compute heat index in Fahrenheit (the default)
+  float hif = dht.computeHeatIndex(f, h);
+  // Compute heat index in Celsius (isFahreheit = false)
+  float hic = dht.computeHeatIndex(t, h, false);
+
+Firebase.setInt(fbdo,"/plant",100);
+Firebase.setFloat(fbdo, "/Temperature",t);
+Firebase.setFloat(fbdo, "/Humidity",h);
+
+
+  
   NilaiDigital = digitalRead(PinDigital); // membaca nilai digital
 
   Serial.print("Nilai Output Digital = ");
